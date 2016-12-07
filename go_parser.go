@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"regexp"
 )
 
 func main() {
-	fmt.Printf("hello, world\n")
 	f, err := os.Open("books.xml")
 
 	if err != nil {
@@ -17,7 +17,15 @@ func main() {
 
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
-		fmt.Println(scanner.Text()) // Println will add back the final '\n'
+		selector := "book"
+		matched, err := regexp.MatchString("</?"+selector+">", scanner.Text())
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if matched {
+			fmt.Println(scanner.Text()) // Println will add back the final '\n'
+		}
 	}
 	if err := scanner.Err(); err != nil {
 		fmt.Fprintln(os.Stderr, "reading standard input:", err)
