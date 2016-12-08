@@ -17,8 +17,8 @@ func main() {
 
 	scanner := bufio.NewScanner(f)
 
-	captureTagRegExp := "</?(.+?)>"            // captures the XML tag
-	re := regexp.MustCompile(captureTagRegExp) // necessary syntax for extracting captures
+	captureTagRegExp := "</?([A-Za-z]{1}[^\t\n\f\r ]*?)>" // captures the XML tag
+	re := regexp.MustCompile(captureTagRegExp)            // necessary syntax for extracting captures
 
 	var regExpResult []string
 
