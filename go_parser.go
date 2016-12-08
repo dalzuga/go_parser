@@ -16,18 +16,17 @@ func main() {
 	}
 
 	scanner := bufio.NewScanner(f)
-	for scanner.Scan() {
-		selector := "book"
-		matched, err := regexp.MatchString("</?"+selector+">", scanner.Text())
-		if err != nil {
-			log.Fatal(err)
-		}
 
-		if matched {
-			fmt.Println(scanner.Text()) // Println will add back the final '\n'
+	captureTagRegExp := "</?(.+?)>" // captures the XML tag
+	re := regexp.MustCompile(captureTagRegExp)
+
+	var regExpResult []string
+
+	for scanner.Scan() {
+		// open, optionally '/', capture (xmltag non-greedy), close
+		regExpResult = re.FindStringSubmatch(scanner.Text())
+		if regExpResult != nil {
+			fmt.Println(regExpResult[1])
 		}
-	}
-	if err := scanner.Err(); err != nil {
-		fmt.Fprintln(os.Stderr, "reading standard input:", err)
 	}
 }
