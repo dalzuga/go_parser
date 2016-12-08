@@ -39,6 +39,7 @@ func main() {
 	mapXMLTags := make(map[string]bool)
 
 	for scanner.Scan() { // read each line
+		checkForComments(scanner)
 		regExpResult = re.FindStringSubmatch(scanner.Text())
 		if regExpResult != nil { // kind of wasteful but necessary check
 			regExpResult = regExpResult[1:] // take out first element
@@ -53,9 +54,15 @@ func main() {
 	}
 }
 
-func checkForComments(scanner bufio.Scanner) {
+func checkForComments(scanner *bufio.Scanner) {
 	CommentOpenExp := "<!--"
 	CommentCloseExp := "-->"
+
+	if subStringInString("", "") {
+		fmt.Println("1true")
+	} else {
+		fmt.Println("1false")
+	}
 
 	fmt.Println(CommentOpenExp + CommentCloseExp)
 }
@@ -65,4 +72,18 @@ func checkForCData(scanner bufio.Scanner) {
 	CDataCloseExp := "]]>"
 
 	fmt.Println(CDataCloseExp + CDataOpenExp)
+}
+
+func subStringInString(sub string, str string) bool {
+	stringLength := len(str)
+	subStringLength := len(sub)
+	for i := 0; i < stringLength; i++ {
+		if stringLength-i < subStringLength {
+			return false
+		}
+		if sub == str[i:i+subStringLength] {
+			return true
+		}
+	}
+	return false
 }
