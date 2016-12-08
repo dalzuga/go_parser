@@ -52,3 +52,17 @@ func main() {
 		}
 	}
 }
+
+func checkForComments(scanner bufio.Scanner) {
+	CommentOpenExp := "<!--"
+	CommentCloseExp := "-->"
+
+	fmt.Println(CommentOpenExp + CommentCloseExp)
+}
+
+func checkForCData(scanner bufio.Scanner) {
+	CDataOpenExp := "<![CDATA["
+	CDataCloseExp := "]]>"
+
+	fmt.Println(CDataCloseExp + CDataOpenExp)
+}
