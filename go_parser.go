@@ -22,11 +22,19 @@ func main() {
 
 	var regExpResult []string
 
+	mapXMLTags := make(map[string]bool)
+
 	for scanner.Scan() {
-		// open, optionally '/', capture (xmltag non-greedy), close
 		regExpResult = re.FindStringSubmatch(scanner.Text())
-		if regExpResult != nil {
-			fmt.Println(regExpResult[1])
+		if regExpResult != nil { // kind of wasteful but necessary check
+			regExpResult = regExpResult[1:] // take out first element
+		}
+
+		for _, value := range regExpResult {
+			if mapXMLTags[value] == false {
+				mapXMLTags[value] = true
+				fmt.Println(value)
+			}
 		}
 	}
 }
