@@ -17,14 +17,14 @@ func main() {
 
 	scanner := bufio.NewScanner(f)
 
-	captureTagRegExp := "</?(.+?)>" // captures the XML tag
-	re := regexp.MustCompile(captureTagRegExp)
+	captureTagRegExp := "</?(.+?)>"            // captures the XML tag
+	re := regexp.MustCompile(captureTagRegExp) // necessary syntax for extracting captures
 
 	var regExpResult []string
 
 	mapXMLTags := make(map[string]bool)
 
-	for scanner.Scan() {
+	for scanner.Scan() { // read each line
 		regExpResult = re.FindStringSubmatch(scanner.Text())
 		if regExpResult != nil { // kind of wasteful but necessary check
 			regExpResult = regExpResult[1:] // take out first element
