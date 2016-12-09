@@ -1,89 +1,38 @@
 package main
 
 import (
-	"bufio"
+	"encoding/xml"
 	"fmt"
+	"io/ioutil"
 	"log"
-	"os"
-	"regexp"
 )
 
 func main() {
-	f, err := os.Open("books.xml")
+	fileBytes, err := ioutil.ReadFile("books.xml") // Read file into memory
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	scanner := bufio.NewScanner(f)
-
-	/*
-	 * This regular expression captures XML tags according to the XML spec.
-	 * XML tags can start with '<' or '</'. Thus: '</?'
-	 * The first character cannot be a punctuation character or a number,
-	 * and it must not be empty. Thus: '[A-Za-z]{1}'.
-	 * The '*?>' section is used for lazy matching until the closing '>'
-	 * character.
-	 * The parentheses '(', ')' are used for capturing and later extracting via
-	 * the FindStringSubmatch function.
-	 * The '[^\t\n\f\r ]' group matches anything that is not whitespace;
-	 * together, with the placement of the closing parenthesis, this allows
-	 * for not capturing attributes.
-	 */
-
-	captureTagRegExp := "</?([A-Za-z]{1}[^\t\n\f\r ]*?)>" // captures the XML tag
-	re := regexp.MustCompile(captureTagRegExp)            // necessary syntax for extracting captures
-
-	var regExpResult []string
-
-	mapXMLTags := make(map[string]bool)
-
-	for scanner.Scan() { // read each line
-		checkForComments(scanner)
-		regExpResult = re.FindStringSubmatch(scanner.Text())
-		if regExpResult != nil { // kind of wasteful but necessary check
-			regExpResult = regExpResult[1:] // take out first element
-		}
-
-		for _, value := range regExpResult {
-			if mapXMLTags[value] == false {
-				mapXMLTags[value] = true
-				fmt.Println(value)
-			}
-		}
-	}
-}
-
-func checkForComments(scanner *bufio.Scanner) {
-	CommentOpenExp := "<!--"
-	CommentCloseExp := "-->"
-
-	if subStringInString("", "") {
-		fmt.Println("1true")
-	} else {
-		fmt.Println("1false")
+	type Author struct {
+		ID   int    `xml:"id"`
+		Name string `xml:"name"`
 	}
 
-	fmt.Println(CommentOpenExp + CommentCloseExp)
-}
-
-func checkForCData(scanner bufio.Scanner) {
-	CDataOpenExp := "<![CDATA["
-	CDataCloseExp := "]]>"
-
-	fmt.Println(CDataCloseExp + CDataOpenExp)
-}
-
-func subStringInString(sub string, str string) bool {
-	stringLength := len(str)
-	subStringLength := len(sub)
-	for i := 0; i < stringLength; i++ {
-		if stringLength-i < subStringLength {
-			return false
-		}
-		if sub == str[i:i+subStringLength] {
-			return true
-		}
+	type Book struct {
+		ID      int      `xml:"id"`
+		Title   string   `xml:"title"`
+		Authors []Author `xml:"authors>author"`
 	}
-	return false
+
+	type Result struct {
+		GoodreadsResponse xml.Name `xml:"GoodreadsResponse"`
+		BookWrapper       []Book   `xml:"book"`
+	}
+
+	var v Result
+
+	err = xml.Unmarshal(fileBytes, &v)
+
+	fmt.Println(v.BookWrapper[0].Authors[0].Name)
 }
