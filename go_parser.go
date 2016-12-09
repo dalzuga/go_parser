@@ -8,6 +8,13 @@ import (
 	"regexp"
 )
 
+const (
+	cOMMENTOPENEXP  = "<!--"
+	cOMMENTCLOSEEXP = "-->"
+	cDATAOPENEXP    = "<![CDATA["
+	cDATACLOSEEXP   = "]]>"
+)
+
 func main() {
 	f, err := os.Open("books.xml")
 
@@ -39,7 +46,7 @@ func main() {
 	mapXMLTags := make(map[string]bool)
 
 	for scanner.Scan() { // read each line
-		checkForComments(scanner)
+		checkForCData(*scanner)
 		regExpResult = re.FindStringSubmatch(scanner.Text())
 		if regExpResult != nil { // kind of wasteful but necessary check
 			regExpResult = regExpResult[1:] // take out first element
@@ -54,24 +61,65 @@ func main() {
 	}
 }
 
-func checkForComments(scanner *bufio.Scanner) {
-	CommentOpenExp := "<!--"
-	CommentCloseExp := "-->"
+func checkForComment(scanner *bufio.Scanner) bool {
+	CommentOpenExp := cOMMENTOPENEXP
+	CommentCloseExp := cOMMENTCLOSEEXP
 
-	if subStringInString("", "") {
-		fmt.Println("1true")
-	} else {
-		fmt.Println("1false")
+	lenCommentOpenExp := len(CommentOpenExp)
+	flagOpenComment := false
+
+	var i int8;
+
+	for i = 0; i < lineLength; i++ {
+		if lineLength-i < lenCommentOpenExp {
+			break
+		}
+		if CommentOpenExp == line[i:i+lenCommentOpenExp] {
+			flagOpenComment = true
+			break
+		}
 	}
+
+	lenCommentCloseExp := len(CommentCloseExp)
+	flagCloseComment := false
+
+	for ; i < lineLength; i++ {
+		if lineLength-i < lenCommentOpenExp {
+			break
+		}
+		if CommentOpenExp == line[i:i+lenCommentOpenExp] {
+			flagOpenComment = true
+			break
+		}
+	}
+
+	return true
+	// testing subStringInString function
+	// if subStringInString("", "") {
+	// 	fmt.Println("1true")
+	// } else {
+	// 	fmt.Println("1false")
+	// }
 
 	fmt.Println(CommentOpenExp + CommentCloseExp)
 }
 
 func checkForCData(scanner bufio.Scanner) {
-	CDataOpenExp := "<![CDATA["
-	CDataCloseExp := "]]>"
+	CDataOpenExp := cDATAOPENEXP
+	CDataCloseExp := cDATACLOSEEXP
 
-	fmt.Println(CDataCloseExp + CDataOpenExp)
+	line := scanner.Text()
+	if subStringInString(CDataOpenExp, line) {
+		fmt.Println("CData open found!")
+		// fmt.Println("line:" + line)
+	}
+
+	if subStringInString(CDataCloseExp, line) {
+		fmt.Println("CData close found!")
+		// fmt.Println("line:" + line)
+	}
+
+	// fmt.Println(CDataCloseExp + CDataOpenExp)
 }
 
 func subStringInString(sub string, str string) bool {
@@ -86,4 +134,32 @@ func subStringInString(sub string, str string) bool {
 		}
 	}
 	return false
+}
+
+// Excepted means anything that is an exception in XML for not parsing the XML tags
+// Includes CDATA and comments of type <!-- comment -->
+// Returns nil if there are no changes
+// It redundantly checks if the line needs to be scrubbed
+// Returns true on success, false if an error occurred
+func scrubExcepted(scanner *bufio.Scanner) {
+	/* look for Excepted sections */
+	line := scanner.Text()
+
+	CDataOpenExp := cDATAOPENEXP
+	CDataCloseExp := cDATACLOSEEXP
+	CommentOpenExp := cOMMENTOPENEXP
+	CommentCloseExp := cOMMENTCLOSEEXP
+
+	lineLength := len(line)
+
+	/* for loop */
+
+
+	if flagOpenComment == false
+
+	// unfinished code
+	// for i := 0; i < lineLength; i++ {
+	//
+	// }
+
 }
