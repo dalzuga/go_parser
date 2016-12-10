@@ -20,7 +20,7 @@ func main() {
 
 	AuthorID := v.Book.Authors[0].ID
 
-	fmt.Println(AuthorID)
+	fmt.Println("AuthorID:", AuthorID)
 
 	fileBytes, err = ioutil.ReadFile("authorlistbooks.xml")
 
@@ -32,8 +32,7 @@ func main() {
 
 	err = xml.Unmarshal(fileBytes, &graq)
 
-	firstBook := graq.Author.Books[0].Title
-
-	fmt.Println(firstBook)
-
+	for _, bookValue := range graq.Author.Books {
+		fmt.Println(bookValue.Title)
+	}
 }
