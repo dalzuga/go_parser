@@ -14,9 +14,26 @@ func main() {
 		log.Fatal(err)
 	}
 
-	var v GoodReadsResult
+	var v GoodReadsBookQuery
 
 	err = xml.Unmarshal(fileBytes, &v)
 
-	fmt.Println(v.BookWrapper[0].Authors[0].ID)
+	AuthorID := v.Book.Authors[0].ID
+
+	fmt.Println(AuthorID)
+
+	fileBytes, err = ioutil.ReadFile("authorlistbooks.xml")
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var graq GoodReadsAuthorQuery
+
+	err = xml.Unmarshal(fileBytes, &graq)
+
+	firstBook := graq.Author.Books[0].Title
+
+	fmt.Println(firstBook)
+
 }

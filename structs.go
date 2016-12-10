@@ -4,8 +4,9 @@ import "encoding/xml"
 
 // Author struct for XML
 type Author struct {
-	ID   int    `xml:"id"`
-	Name string `xml:"name"`
+	ID    int    `xml:"id"`
+	Name  string `xml:"name"`
+	Books []Book `xml:"books>book"`
 }
 
 // Book struct for XML
@@ -15,8 +16,14 @@ type Book struct {
 	Authors []Author `xml:"authors>author"`
 }
 
-// GoodReadsResult struct for XML
-type GoodReadsResult struct {
+// GoodReadsBookQuery struct for XML
+type GoodReadsBookQuery struct {
 	GoodreadsResponse xml.Name `xml:"GoodreadsResponse"`
-	BookWrapper       []Book   `xml:"book"`
+	Book              Book     `xml:"book"`
+}
+
+// GoodReadsAuthorQuery struct for XML
+type GoodReadsAuthorQuery struct {
+	GoodreadsResponse xml.Name `xml:"GoodreadsResponse"`
+	Author            Author   `xml:"author"`
 }
