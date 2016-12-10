@@ -14,7 +14,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	var v Result
+	var v GoodReadsResult
 
 	err = xml.Unmarshal(fileBytes, &v)
 

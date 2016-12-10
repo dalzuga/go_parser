@@ -15,8 +15,8 @@ type Book struct {
 	Authors []Author `xml:"authors>author"`
 }
 
-// Result struct for XML
-type Result struct {
+// GoodReadsResult struct for XML
+type GoodReadsResult struct {
 	GoodreadsResponse xml.Name `xml:"GoodreadsResponse"`
 	BookWrapper       []Book   `xml:"book"`
 }
