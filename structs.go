@@ -18,16 +18,19 @@ type BookGRBQ struct {
 
 // AuthorGRAQ struct for XML
 type AuthorGRAQ struct {
-	ID        int        `xml:"id"`
-	Name      string     `xml:"name"`
-	Books     []BookGRAQ `xml:"books>book"`
-	BooksAttr BooksGRAQ  `xml:"books"`
+	ID   int    `xml:"id"`
+	Name string `xml:"name"`
+	/*
+	 * A bug was found at the line below (line:27)
+	 * Uncomment the line to see that it breaks functionality
+	 */
+	// Books     []BookGRAQ `xml:"books>book"`
+	BooksAttr Books `xml:"books"`
 }
 
 // BooksGRAQ struct for XML
-type BooksGRAQ struct {
-	XMLName xml.Name `xml:"books"`
-	Start   string   `xml:"start,attr"`
+type Books struct {
+	Start string `xml:"start,attr"`
 }
 
 // BookGRAQ struct for XML
