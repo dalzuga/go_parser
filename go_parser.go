@@ -32,9 +32,11 @@ func main() {
 
 	err = xml.Unmarshal(fileBytes, &graq)
 
-	for _, bookValue := range graq.Author.Books {
+	for _, bookValue := range graq.Author.Books.Book {
 		fmt.Println(bookValue.Title)
 	}
 
-	fmt.Println("start: ", graq.Author.BooksAttr.Start)
+	fmt.Println("start: ", graq.Author.Books.Start)
+	fmt.Println("end: ", graq.Author.Books.End)
+	fmt.Println("total: ", graq.Author.Books.Total)
 }
