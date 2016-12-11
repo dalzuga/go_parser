@@ -14,11 +14,11 @@ func main() {
 		log.Fatal(err)
 	}
 
-	var v GoodReadsBookQuery
+	var grbq GoodReadsBookQuery
 
-	err = xml.Unmarshal(fileBytes, &v)
+	err = xml.Unmarshal(fileBytes, &grbq)
 
-	AuthorID := v.Book.Authors[0].ID
+	AuthorID := grbq.Book.Authors[0].ID
 
 	fmt.Println("AuthorID:", AuthorID)
 
