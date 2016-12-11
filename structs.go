@@ -18,9 +18,16 @@ type BookGRBQ struct {
 
 // AuthorGRAQ struct for XML
 type AuthorGRAQ struct {
-	ID    int        `xml:"id"`
-	Name  string     `xml:"name"`
-	Books []BookGRAQ `xml:"books>book"`
+	ID        int        `xml:"id"`
+	Name      string     `xml:"name"`
+	Books     []BookGRAQ `xml:"books>book"`
+	BooksAttr BooksGRAQ  `xml:"books"`
+}
+
+// BooksGRAQ struct for XML
+type BooksGRAQ struct {
+	XMLName xml.Name `xml:"books"`
+	Start   string   `xml:"start,attr"`
 }
 
 // BookGRAQ struct for XML
@@ -39,5 +46,5 @@ type GoodReadsBookQuery struct {
 // GoodReadsAuthorQuery struct for XML
 type GoodReadsAuthorQuery struct {
 	GoodreadsResponse xml.Name   `xml:"GoodreadsResponse"`
-	Author            AuthorGRBQ `xml:"author"`
+	Author            AuthorGRAQ `xml:"author"`
 }

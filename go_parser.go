@@ -35,4 +35,6 @@ func main() {
 	for _, bookValue := range graq.Author.Books {
 		fmt.Println(bookValue.Title)
 	}
+
+	fmt.Println("start: ", graq.Author.BooksAttr.Start)
 }
