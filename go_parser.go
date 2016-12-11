@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net/url"
 )
 
 func main() {
@@ -42,5 +43,38 @@ func main() {
 
 	fmt.Println("________________________________")
 
-	fmt.Println(start, end, total, (end-start)/total)
+	startBooks := graq.Author.Books.Start
+	endBooks := graq.Author.Books.End
+	totalBooks := graq.Author.Books.Total
+
+	fmt.Println(startBooks, endBooks, totalBooks, totalBooks/endBooks)
+
+	/* Code below is for pagination, need to code makeHTTPRequest */
+	// for totalBooks < endBooks {
+	// 	makeHTTPRequest(url string, AuthorID, &graq)
+	// 	for _, bookValue := range graq.Author.Books.Book {
+	// 		fmt.Println(bookValue.Title)
+	// 	}
+	// }
+
+	makeHTTPRequest("https://www.goodreads.com/author/list.xml", AuthorID, &graq)
+}
+
+func makeHTTPRequest(uri string, AuthorID int, graq *GoodReadsAuthorQuery) error {
+
+	// client := &http.Client{}
+
+	u, err := url.Parse(uri)
+
+	q := u.Query()
+	q.Set("key", `kDkKnUxiz8cRBJhVjrtSA`)
+	q.Set("id", `4`)
+
+	fmt.Println(q.Encode())
+
+	// resp, err := client.Do(req)
+	//
+	// fmt.Println(resp.Body)
+
+	return err
 }
