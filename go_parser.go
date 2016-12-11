@@ -39,4 +39,8 @@ func main() {
 	fmt.Println("start: ", graq.Author.Books.Start)
 	fmt.Println("end: ", graq.Author.Books.End)
 	fmt.Println("total: ", graq.Author.Books.Total)
+
+	fmt.Println("________________________________")
+
+	fmt.Println(start, end, total, (end-start)/total)
 }
