@@ -58,10 +58,10 @@ func main() {
 	// 	}
 	// }
 
-	makeHTTPRequest("https://www.goodreads.com/author/list.xml", AuthorID, &graq)
+	makeHTTPRequest("https://www.goodreads.com/author/list.xml", AuthorID)
 }
 
-func makeHTTPRequest(uri string, AuthorID int, graq *GoodReadsAuthorQuery) error {
+func makeHTTPRequest(uri string, AuthorID int) {
 
 	client := &http.Client{}
 
@@ -84,13 +84,15 @@ func makeHTTPRequest(uri string, AuthorID int, graq *GoodReadsAuthorQuery) error
 	fullURL := u.Host + u.RequestURI()
 	fmt.Println(fullURL)
 
-	req, err := http.NewRequest("GET", fullURL, nil)
+	fmt.Println(u.Scheme)
+
+	req, err := http.NewRequest("GET", u.Scheme+"://"+fullURL, nil)
 
 	resp, err := client.Do(req)
 
 	if err != nil {
-		fmt.Println(resp)
+		log.Fatal(err)
 	}
 
-	return err
+	fmt.Println(resp)
 }
