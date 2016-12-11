@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"net/url"
 )
 
@@ -62,7 +63,7 @@ func main() {
 
 func makeHTTPRequest(uri string, AuthorID int, graq *GoodReadsAuthorQuery) error {
 
-	// client := &http.Client{}
+	client := &http.Client{}
 
 	u, err := url.Parse(uri)
 	// fmt.Println("Host:", u.Host)
@@ -77,11 +78,19 @@ func makeHTTPRequest(uri string, AuthorID int, graq *GoodReadsAuthorQuery) error
 
 	u.RawQuery = q.Encode()
 
-	fmt.Println(u)
+	fmt.Println(u.Host)
+	fmt.Println(u.RequestURI())
 
-	// resp, err := client.Do(req)
-	//
-	// fmt.Println(resp.Body)
+	fullURL := u.Host + u.RequestURI()
+	fmt.Println(fullURL)
+
+	req, err := http.NewRequest("GET", fullURL, nil)
+
+	resp, err := client.Do(req)
+
+	if err != nil {
+		fmt.Println(resp)
+	}
 
 	return err
 }
