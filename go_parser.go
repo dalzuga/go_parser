@@ -65,12 +65,19 @@ func makeHTTPRequest(uri string, AuthorID int, graq *GoodReadsAuthorQuery) error
 	// client := &http.Client{}
 
 	u, err := url.Parse(uri)
+	// fmt.Println("Host:", u.Host)
+	// u.Scheme = "https"
+	// u.Host = "goodreads.com"
 
 	q := u.Query()
 	q.Set("key", `kDkKnUxiz8cRBJhVjrtSA`)
 	q.Set("id", `4`)
 
 	fmt.Println(q.Encode())
+
+	u.RawQuery = q.Encode()
+
+	fmt.Println(u)
 
 	// resp, err := client.Do(req)
 	//
