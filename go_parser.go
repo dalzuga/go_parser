@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 )
 
@@ -94,5 +95,12 @@ func makeHTTPRequest(uri string, AuthorID int) {
 		log.Fatal(err)
 	}
 
-	fmt.Println(resp)
+	// fmt.Println()
+
+	dump, err := httputil.DumpResponse(resp, true)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf("%q", dump)
 }
