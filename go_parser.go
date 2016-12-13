@@ -10,12 +10,7 @@ import (
 	"strconv"
 )
 
-/*
- * GRBQ stands for GoodReads Book Query
- * GRAQ stands for GoodReads Author Query
- */
-
-func main() {
+func getAuthorID(fileName string, AuthorID *int) {
 	fileBytes, err := ioutil.ReadFile("books.xml") // Read the GRBQ XML into memory
 	if err != nil {
 		log.Fatal(err)
@@ -28,26 +23,40 @@ func main() {
 		log.Fatal(err)
 	}
 
-	AuthorID := grbq.Book.Authors[0].ID // Get the Author ID from the GRBQ struct
+	*AuthorID = grbq.Book.Authors[0].ID // Get the Author ID from the GRBQ struct
+}
 
-	// fmt.Println("AuthorID:", AuthorID)
-
+/* Here we are parsing the file into a struct */
+func parseFile(string fileName, graq *GoodReadsAuthorQuery) {
 	/*
 	 * Here we are re-using fileBytes but for GRAQ, analogously
 	 */
 
-	fileBytes, err = ioutil.ReadFile("authorlistbooks.xml") // Read the GRAQ XML into memory
+	var fileBytes []byte
+
+	fileBytes, err := ioutil.ReadFile(fileName) // Read the GRAQ XML into memory
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	var graq GoodReadsAuthorQuery
 
 	err = xml.Unmarshal(fileBytes, &graq) // Parse the GRAQ XML to a GRBQ struct
 
 	for _, bookValue := range graq.Author.Books.Book {
 		fmt.Println(bookValue.Title)
 	}
+}
+
+/*
+ * GRBQ stands for GoodReads Book Query
+ * GRAQ stands for GoodReads Author Query
+ */
+
+func main() {
+	var AuthorID int
+	getAuthorID("books.xml", &AuthorID)
+
+	var graq GoodReadsBookQuery
+	parseFile("authorlistbooks.xml", &graq)
 
 	startBooks := graq.Author.Books.Start
 	endBooks := graq.Author.Books.End
@@ -113,14 +122,6 @@ func makeHTTPRequest(uri string, AuthorID int, pageNumber int, graq *GoodReadsAu
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	/* Uncomment lines below to dump the http response */
-	// dump, err := httputil.DumpResponse(resp, true)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	//
-	// fmt.Printf("%q", dump)
 
 	requestBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
