@@ -65,7 +65,13 @@ func main() {
 	fmt.Println("_______________XML INFO_______________")
 	fmt.Println(startBooks, endBooks, totalBooks, totalBooks/endBooks)
 
-	/* Code below is for pagination, need to code makeHTTPRequest */
+	/* 
+         * Code below is for pagination.
+	 * 
+         * Here I am using a scope trick: I didn't know how to clear the contents of graq idiomatically,
+         * so I declared another variable, graqOtherPages, inside the loop
+	 */
+	
 	pageNumber := 1
 	for totalBooks > endBooks {
 		var graqOtherPages GoodReadsAuthorQuery
