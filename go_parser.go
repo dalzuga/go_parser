@@ -10,55 +10,75 @@ import (
 	"strconv"
 )
 
-func main() {
-	fileBytes, err := ioutil.ReadFile("books.xml") // Read file into memory
-
+func getAuthorID(fileName string, AuthorID *int) {
+	fileBytes, err := ioutil.ReadFile("books.xml") // Read the GRBQ XML into memory
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	var grbq GoodReadsBookQuery
 
-	err = xml.Unmarshal(fileBytes, &grbq)
-
-	AuthorID := grbq.Book.Authors[0].ID
-
-	// fmt.Println("AuthorID:", AuthorID)
-
-	fileBytes, err = ioutil.ReadFile("authorlistbooks.xml")
+	err = xml.Unmarshal(fileBytes, &grbq) // Parse the GBRQ XML to a GRBQ struct
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	var graq GoodReadsAuthorQuery
+	*AuthorID = grbq.Book.Authors[0].ID // Get the Author ID from the GRBQ struct
+}
 
-	err = xml.Unmarshal(fileBytes, &graq)
+/* Here we are parsing the file into a struct */
+func parseFile(fileName string, graq *GoodReadsAuthorQuery) {
+
+	var fileBytes []byte
+
+	fileBytes, err := ioutil.ReadFile(fileName) // Read the GRAQ XML into memory
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = xml.Unmarshal(fileBytes, &graq) // Parse the GRAQ XML to a GRBQ struct
 
 	for _, bookValue := range graq.Author.Books.Book {
 		fmt.Println(bookValue.Title)
 	}
+}
 
-	fmt.Println("start: ", graq.Author.Books.Start)
-	fmt.Println("end: ", graq.Author.Books.End)
-	fmt.Println("total: ", graq.Author.Books.Total)
+/*
+ * GRBQ stands for GoodReads Book Query
+ * GRAQ stands for GoodReads Author Query
+ */
 
-	fmt.Println("________________________________")
+func main() {
+	var AuthorID int
+	getAuthorID("books.xml", &AuthorID)
 
-	startBooks := graq.Author.Books.Start
-	endBooks := graq.Author.Books.End
-	totalBooks := graq.Author.Books.Total
+	var graqPageOne GoodReadsAuthorQuery
+	parseFile("authorlistbooks.xml", &graqPageOne)
 
+	startBooks := graqPageOne.Author.Books.Start
+	endBooks := graqPageOne.Author.Books.End
+	totalBooks := graqPageOne.Author.Books.Total
+
+	fmt.Println("_______________XML INFO_______________")
 	fmt.Println(startBooks, endBooks, totalBooks, totalBooks/endBooks)
 
-	/* Code below is for pagination, need to code makeHTTPRequest */
+	/*
+	 * Code below is for pagination.
+	 *
+	 * Here I am using a scope trick: I didn't know how to clear the contents of graq idiomatically,
+	 * so I declared another variable, graqOtherPages, inside the loop
+	 */
+
 	pageNumber := 1
 	for totalBooks > endBooks {
+		var graqOtherPages GoodReadsAuthorQuery
 		fmt.Println("_______________________REQUEST________________________")
-		makeHTTPRequest("https://www.goodreads.com/author/list.xml", AuthorID, pageNumber, &graq)
-		startBooks = graq.Author.Books.Start
-		endBooks = graq.Author.Books.End
-		totalBooks = graq.Author.Books.Total
-		for _, bookValue := range graq.Author.Books.Book {
+		makeHTTPRequest("https://www.goodreads.com/author/list.xml", AuthorID, pageNumber, &graqOtherPages)
+		startBooks = graqOtherPages.Author.Books.Start
+		endBooks = graqOtherPages.Author.Books.End
+		totalBooks = graqOtherPages.Author.Books.Total
+		for _, bookValue := range graqOtherPages.Author.Books.Book {
 			fmt.Println(bookValue.Title)
 		}
 		pageNumber++
@@ -96,6 +116,8 @@ func makeHTTPRequest(uri string, AuthorID int, pageNumber int, graq *GoodReadsAu
 	// fmt.Println(u.RequestURI())
 
 	fullURL := u.String()
+	fmt.Println(fullURL)
+
 	// fmt.Println(fullURL)
 
 	req, err := http.NewRequest("GET", fullURL, nil)
@@ -107,14 +129,6 @@ func makeHTTPRequest(uri string, AuthorID int, pageNumber int, graq *GoodReadsAu
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	/* Uncomment lines below to dump the http response */
-	// dump, err := httputil.DumpResponse(resp, true)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	//
-	// fmt.Printf("%q", dump)
 
 	requestBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
