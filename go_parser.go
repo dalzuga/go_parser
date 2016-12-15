@@ -28,13 +28,11 @@ func getAuthorID(fileName string, AuthorID *int) {
 
 /* Here we are parsing the file into a struct */
 func parseFile(fileName string, graq *GoodReadsAuthorQuery) {
-	/*
-	 * Here we are re-using fileBytes but for GRAQ, analogously
-	 */
 
 	var fileBytes []byte
 
 	fileBytes, err := ioutil.ReadFile(fileName) // Read the GRAQ XML into memory
+
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -65,13 +63,13 @@ func main() {
 	fmt.Println("_______________XML INFO_______________")
 	fmt.Println(startBooks, endBooks, totalBooks, totalBooks/endBooks)
 
-	/* 
-         * Code below is for pagination.
-	 * 
-         * Here I am using a scope trick: I didn't know how to clear the contents of graq idiomatically,
-         * so I declared another variable, graqOtherPages, inside the loop
+	/*
+	 * Code below is for pagination.
+	 *
+	 * Here I am using a scope trick: I didn't know how to clear the contents of graq idiomatically,
+	 * so I declared another variable, graqOtherPages, inside the loop
 	 */
-	
+
 	pageNumber := 1
 	for totalBooks > endBooks {
 		var graqOtherPages GoodReadsAuthorQuery
@@ -119,6 +117,8 @@ func makeHTTPRequest(uri string, AuthorID int, pageNumber int, graq *GoodReadsAu
 
 	fullURL := u.String()
 	fmt.Println(fullURL)
+
+	// fmt.Println(fullURL)
 
 	req, err := http.NewRequest("GET", fullURL, nil)
 	if err != nil {
