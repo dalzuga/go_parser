@@ -30,8 +30,8 @@ func main() {
 }
 
 /*
- * getAuthorID takes a filename, loads into memory, and parses
- * the XML into the corresponding struct
+ * getAuthorID takes a filename, loads the file into memory, and parses the XML
+ * into the corresponding struct to obtain the Goodreads author ID
  */
 
 func getAuthorID(fileName string) (int, error) {
@@ -50,24 +50,54 @@ func getAuthorID(fileName string) (int, error) {
 	return grbq.Book.Authors[0].ID, nil // Return the Author ID from the GRBQ struct
 }
 
+/*
+ * requestAllBookTitles retrieves all the book titles from the Goodreads API
+ * @return: map[int]string
+ */
 func requestAllBookTitles(AuthorID int) (map[int]string, error) {
-	fmt.Println(AuthorID)
 	endpointBase := "https://www.goodreads.com/author/list.xml"
 	page := 1
-	var startBooks, endBooks, totalBooks int
 
-	fmt.Println(startBooks, endBooks, totalBooks)
-
-	/*
-	 * Here, 'u' is a parsed object.
-	 */
-	u, err := url.Parse(endpointBase)
+	s, err := prepareRequest(endpointBase, page, AuthorID)
 	if err != nil {
 		return make(map[int]string), err
 	}
 
 	/*
-	 * Here, the query 'q' is formulated
+	 * resp is of type *http.Response
+	 */
+	resp, err := doRequest(s)
+	if err != nil {
+		return make(map[int]string), err
+	}
+
+	/*
+	 * If the API needs to paginate the response, set var 'more' to 'true'.
+	 * Default is 'false'.
+	 */
+	mapTitles, more, err := parseResponse(resp)
+	if err != nil {
+		return make(map[int]string), err
+	}
+
+	if more {
+		fmt.Println("There are more books in the API.")
+	}
+
+	return mapTitles, nil
+}
+
+func prepareRequest(endpointBase string, page int, AuthorID int) (string, error) {
+	/*
+	 * Here, 'u' is a url object.
+	 */
+	u, err := url.Parse(endpointBase)
+	if err != nil {
+		return "", err
+	}
+
+	/*
+	 * Here, we make a query 'q' out of url object 'u'
 	 */
 	q := u.Query()
 	q.Set("key", `kDkKnUxiz8cRBJhVjrtSA`)
@@ -75,41 +105,65 @@ func requestAllBookTitles(AuthorID int) (map[int]string, error) {
 	q.Set("page", strconv.Itoa(page))
 
 	/*
-	 * Here, 's' is our full constructed URL string
+	 * Here, 's' is our fully constructed URL string
 	 */
 	u.RawQuery = q.Encode()
 	s := u.String()
 	fmt.Println(s)
 
+	return s, nil
+}
+
+func doRequest(s string) (*http.Response, error) {
 	req, err := http.NewRequest("GET", s, nil)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	client := &http.Client{}
 
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
+
+	return resp, nil
+}
+
+func parseResponse(resp *http.Response) (map[int]string, bool, error) {
 
 	requestBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatal(err)
+		return make(map[int]string), false, err
 	}
 
 	var graq GoodReadsAuthorQuery
 
 	err = xml.Unmarshal(requestBytes, &graq)
 	if err != nil {
-		log.Fatal(err)
+		return make(map[int]string), false, err
 	}
 
-	mapTitles := make(map[int]string)
+	var requestTitles = make(map[int]string)
 
 	for key, bookValue := range graq.Author.Books.Book {
-		mapTitles[key] = bookValue.Title
+		requestTitles[key] = bookValue.Title
 	}
 
-	return mapTitles, nil
+	more := checkForMore(&graq)
+
+	return requestTitles, more, nil
+}
+
+func checkForMore(graq *GoodReadsAuthorQuery) bool {
+	var end, total int
+
+	end = graq.Author.Books.End
+	total = graq.Author.Books.Total
+
+	if total != end {
+		return true
+	}
+
+	return false
 }
