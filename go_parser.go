@@ -7,7 +7,6 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"reflect"
 	"strconv"
 )
 
@@ -17,11 +16,12 @@ import (
  */
 
 func main() {
-	var AuthorID int
-	getAuthorID("books.xml", &AuthorID)
+	AuthorID, err := getAuthorID("books.xml")
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	mapTitles, err := requestAllBookTitles(AuthorID)
-	fmt.Println(reflect.TypeOf(mapTitles))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -34,20 +34,20 @@ func main() {
  * the XML into the corresponding struct
  */
 
-func getAuthorID(fileName string, AuthorID *int) {
+func getAuthorID(fileName string) (int, error) {
 	fileBytes, err := ioutil.ReadFile("books.xml") // Read the GRBQ XML into memory
 	if err != nil {
-		log.Fatal(err)
+		return 0, err
 	}
 
 	var grbq GoodReadsBookQuery
 
 	err = xml.Unmarshal(fileBytes, &grbq) // Parse the GBRQ XML to a GRBQ struct
 	if err != nil {
-		log.Fatal(err)
+		return 0, err
 	}
 
-	*AuthorID = grbq.Book.Authors[0].ID // Get the Author ID from the GRBQ struct
+	return grbq.Book.Authors[0].ID, nil // Return the Author ID from the GRBQ struct
 }
 
 func requestAllBookTitles(AuthorID int) (map[int]string, error) {
