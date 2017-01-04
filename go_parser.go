@@ -67,7 +67,7 @@ func requestAllBookTitles(AuthorID int) (map[int]string, error) {
 	}
 
 	/*
-	 * Here, the query 'q' is formulated, for which RawString is the full URL
+	 * Here, the query 'q' is formulated
 	 */
 	q := u.Query()
 	q.Set("key", `kDkKnUxiz8cRBJhVjrtSA`)
