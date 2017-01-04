@@ -80,8 +80,9 @@ func requestAllBookTitles(AuthorID int) (map[int]string, error) {
 		return make(map[int]string), err
 	}
 
-	if more {
+	if more > 0 {
 		fmt.Println("There are more books in the API.")
+		fmt.Println("Additional requests needed:", more)
 	}
 
 	return mapTitles, nil
@@ -130,18 +131,18 @@ func doRequest(s string) (*http.Response, error) {
 	return resp, nil
 }
 
-func parseResponse(resp *http.Response) (map[int]string, bool, error) {
+func parseResponse(resp *http.Response) (map[int]string, int, error) {
 
 	requestBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return make(map[int]string), false, err
+		return make(map[int]string), 0, err
 	}
 
 	var graq GoodReadsAuthorQuery
 
 	err = xml.Unmarshal(requestBytes, &graq)
 	if err != nil {
-		return make(map[int]string), false, err
+		return make(map[int]string), 0, err
 	}
 
 	var requestTitles = make(map[int]string)
@@ -150,20 +151,24 @@ func parseResponse(resp *http.Response) (map[int]string, bool, error) {
 		requestTitles[key] = bookValue.Title
 	}
 
-	more := checkForMore(&graq)
+	more, err := checkForMore(&graq)
+	if err != nil {
+		return make(map[int]string), 0, err
+	}
 
 	return requestTitles, more, nil
 }
 
-func checkForMore(graq *GoodReadsAuthorQuery) bool {
-	var end, total int
+func checkForMore(graq *GoodReadsAuthorQuery) (int, error) {
+	var start, end, total int
 
+	start = graq.Author.Books.Start
 	end = graq.Author.Books.End
 	total = graq.Author.Books.Total
 
 	if total != end {
-		return true
+		return (total-end+start)/(end-start) + 1, nil
 	}
 
-	return false
+	return 0, nil
 }
