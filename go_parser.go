@@ -58,24 +58,7 @@ func requestAllBookTitles(AuthorID int) (map[int]string, error) {
 	endpointBase := "https://www.goodreads.com/author/list.xml"
 	page := 1
 
-	s, err := prepareRequest(endpointBase, page, AuthorID)
-	if err != nil {
-		return make(map[int]string), err
-	}
-
-	/*
-	 * resp is of type *http.Response
-	 */
-	resp, err := doRequest(s)
-	if err != nil {
-		return make(map[int]string), err
-	}
-
-	/*
-	 * If the API needs to paginate the response, set var 'more' to 'true'.
-	 * Default is 'false'.
-	 */
-	mapTitles, more, err := parseResponse(resp)
+	mapTitles, more, err := requestPage(page, AuthorID, endpointBase)
 	if err != nil {
 		return make(map[int]string), err
 	}
@@ -88,13 +71,42 @@ func requestAllBookTitles(AuthorID int) (map[int]string, error) {
 	return mapTitles, nil
 }
 
-func prepareRequest(endpointBase string, page int, AuthorID int) (string, error) {
+/* This function requests a page from the API. */
+func requestPage(page int, AuthorID int, endpointBase string) (map[int]string, int, error) {
+	req, err := prepareRequest(endpointBase, page, AuthorID)
+	if err != nil {
+		return make(map[int]string), 0, err
+	}
+
+	/*
+	 * resp is of type *http.Response
+	 */
+	resp, err := doRequest(req)
+	if err != nil {
+		return make(map[int]string), 0, err
+	}
+
+	/*
+	 * var 'more' is an int.
+	 * If the API needs to paginate the response, more will indicate how many
+	 * pages need to be requested for a full list of book titles.
+	 * If there is no need to paginate, more will default to 0.
+	 */
+	mapTitles, more, err := parseResponse(resp)
+	if err != nil {
+		return make(map[int]string), 0, err
+	}
+
+	return mapTitles, more, nil
+}
+
+func prepareRequest(endpointBase string, page int, AuthorID int) (*http.Request, error) {
 	/*
 	 * Here, 'u' is a url object.
 	 */
 	u, err := url.Parse(endpointBase)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	/*
@@ -112,15 +124,15 @@ func prepareRequest(endpointBase string, page int, AuthorID int) (string, error)
 	s := u.String()
 	fmt.Println(s)
 
-	return s, nil
-}
-
-func doRequest(s string) (*http.Response, error) {
 	req, err := http.NewRequest("GET", s, nil)
 	if err != nil {
 		return nil, err
 	}
 
+	return req, nil
+}
+
+func doRequest(req *http.Request) (*http.Response, error) {
 	client := &http.Client{}
 
 	resp, err := client.Do(req)
@@ -132,7 +144,6 @@ func doRequest(s string) (*http.Response, error) {
 }
 
 func parseResponse(resp *http.Response) (map[int]string, int, error) {
-
 	requestBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return make(map[int]string), 0, err
