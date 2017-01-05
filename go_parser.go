@@ -26,7 +26,11 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Println(mapTitles[0])
+	mapLength := len(mapTitles)
+
+	for i := 0; i < mapLength; i++ {
+		fmt.Println(i+1, mapTitles[i])
+	}
 }
 
 /*
@@ -66,6 +70,23 @@ func requestAllBookTitles(AuthorID int) (map[int]string, error) {
 	if more > 0 {
 		fmt.Println("There are more books in the API.")
 		fmt.Println("Additional requests needed:", more)
+	}
+
+	var moreTitles map[int]string
+
+	for more > 0 {
+		page++
+		// mapTitles, more, err := requestPage(page, AuthorID, endpointBase)
+		moreTitles, more, err = requestPage(page, AuthorID, endpointBase)
+		if err != nil {
+			return make(map[int]string), err
+		}
+
+		i := len(mapTitles)
+		for _, value := range moreTitles {
+			mapTitles[i] = value
+			i++
+		}
 	}
 
 	return mapTitles, nil
