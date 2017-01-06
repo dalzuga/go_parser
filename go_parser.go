@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
+	"strconv"
 )
 
 /*
@@ -13,10 +15,24 @@ import (
  */
 
 func main() {
-	AuthorID, err := getAuthorID("books.xml")
-	if err != nil {
-		log.Fatal(err)
+	var AuthorID int
+	var err error
+
+	argc := len(os.Args)
+
+	if argc == 2 {
+		AuthorID, err = strconv.Atoi(os.Args[1])
+		if err != nil {
+			log.Fatal(err)
+		}
+	} else {
+		AuthorID, err = getAuthorID("books.xml")
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
+
+	fmt.Println(AuthorID)
 
 	mapTitles, err := requestAllBookTitles(AuthorID)
 	if err != nil {
@@ -73,7 +89,6 @@ func requestAllBookTitles(AuthorID int) (map[int]string, error) {
 
 	for more > 0 {
 		page++
-		// mapTitles, more, err := requestPage(page, AuthorID, endpointBase)
 		moreTitles, more, err = requestPage(page, AuthorID, endpointBase)
 		if err != nil {
 			return make(map[int]string), err
