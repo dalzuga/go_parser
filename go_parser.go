@@ -89,7 +89,8 @@ func requestAllBookTitles(AuthorID int) (map[int]string, error) {
 
 	for more > 0 {
 		page++
-		moreTitles, more, err = requestPage(page, AuthorID, endpointBase)
+		more--
+		moreTitles, _, err = requestPage(page, AuthorID, endpointBase)
 		if err != nil {
 			return make(map[int]string), err
 		}
