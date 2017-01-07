@@ -116,7 +116,7 @@ func checkForMore(graq *GoodReadsAuthorQuery) (int, error) {
 	total = graq.Author.Books.Total
 
 	if total != end {
-		return (total-end+start)/(end-start) + 1, nil
+		return (total-end)/(end-start+1) + 1, nil
 	}
 
 	return 0, nil
