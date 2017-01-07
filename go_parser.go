@@ -85,22 +85,73 @@ func requestAllBookTitles(AuthorID int) (map[int]string, error) {
 		fmt.Println("Additional requests needed:", more)
 	}
 
-	var moreTitles map[int]string
+	/* Make a map of channels, 1 channel per page */
+	// channels := make(map[int](chan map[int]string))
 
-	for more > 0 {
-		page++
-		more--
-		moreTitles, _, err = requestPage(page, AuthorID, endpointBase)
+	/* Make 'more' requests */
+	// for i := 2; i <= more; i++ {
+	// 	// channelMaps := make(chan map[int]string)
+	// 	fmt.Println("For loop. i =", i)
+	// 	go func(i int) {
+	// 		fmt.Println("Go func. i =", i)
+	// 		moreTitles, _, err := requestPage(i, AuthorID, endpointBase)
+	// 		if err != nil {
+	// 			fmt.Println("This request failed:", i)
+	// 			channels[i] <- make(map[int]string)
+	// 		} else {
+	// 			fmt.Println("Received: page", i)
+	// 			fmt.Println("111")
+	// 			channels[i] <- moreTitles
+	// 			fmt.Println("222")
+	// 		}
+	// 	}(i)
+	// }
+
+	channel2 := make(chan map[int]string)
+	i := 2
+	// channelMaps := make(chan map[int]string)
+	fmt.Println("For loop. i =", i)
+	go func(i int) {
+		fmt.Println("Go func. i =", i)
+		moreTitles, _, err := requestPage(i, AuthorID, endpointBase)
 		if err != nil {
-			return make(map[int]string), err
+			fmt.Println("This request failed:", i)
+			channel2 <- make(map[int]string)
+		} else {
+			fmt.Println("Received: page", i)
+			fmt.Println("111")
+			channel2 <- moreTitles
+			fmt.Println("222")
 		}
+	}(i)
 
-		i := len(mapTitles)
-		for _, value := range moreTitles {
-			mapTitles[i] = value
-			i++
-		}
-	}
+	fmt.Println("555. more:", more)
+
+	someMap := <-channel2
+	fmt.Println(someMap)
+	fmt.Println("Receiving channel:", i)
+
+	/* Receive pages in order */
+	// for i := 2; i <= more; i++ {
+	// 	fmt.Println("Receiving channel:", i)
+	// }
+
+	// var moreTitles map[int]string
+	//
+	// for more > 0 {
+	// 	page++
+	// 	more--
+	// 	moreTitles, _, err = requestPage(page, AuthorID, endpointBase)
+	// 	if err != nil {
+	// 		return make(map[int]string), err
+	// 	}
+	//
+	// 	i := len(mapTitles)
+	// 	for _, value := range moreTitles {
+	// 		mapTitles[i] = value
+	// 		i++
+	// 	}
+	// }
 
 	return mapTitles, nil
 }
