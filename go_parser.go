@@ -86,7 +86,7 @@ func requestAllBookTitles(AuthorID int) (map[int]string, error) {
 	}
 
 	/* Make a map of channels, 1 channel per page */
-	channels := make(map[int](chan map[int]string))
+	channels := make(map[int]chan map[int]string)
 	for i := 2; i <= more+1; i++ {
 		channels[i] = make(chan map[int]string)
 	}
@@ -110,72 +110,21 @@ func requestAllBookTitles(AuthorID int) (map[int]string, error) {
 		}(i)
 	}
 
-	// for i := 2; i <= more+1; i++ {
-	// 	channels[i] = make(chan map[int]string)
-	// }
-	//
-	// i := 2
-	//
-	// // channels[i] = make(chan map[int]string)
-	// // channelMaps := make(chan map[int]string)
-	// fmt.Println("For loop. i =", i)
-	// go func(i int) {
-	// 	fmt.Println("Go func. i =", i)
-	// 	moreTitles, _, err := requestPage(i, AuthorID, endpointBase)
-	// 	if err != nil {
-	// 		fmt.Println("This request failed:", i)
-	// 		channels[i] <- make(map[int]string)
-	// 	} else {
-	// 		fmt.Println("Received: page", i)
-	// 		fmt.Println("111")
-	// 		channels[i] <- moreTitles
-	// 		fmt.Println("222")
-	// 	}
-	// }(i)
-	//
-	// i = 3
-	//
-	// // channels[i] = make(chan map[int]string)
-	// // channelMaps := make(chan map[int]string)
-	// fmt.Println("For loop. i =", i)
-	// go func(i int) {
-	// 	fmt.Println("Go func. i =", i)
-	// 	moreTitles, _, err := requestPage(i, AuthorID, endpointBase)
-	// 	if err != nil {
-	// 		fmt.Println("This request failed:", i)
-	// 		channels[i] <- make(map[int]string)
-	// 	} else {
-	// 		fmt.Println("Received: page", i)
-	// 		fmt.Println("333")
-	// 		channels[i] <- moreTitles
-	// 		fmt.Println("444")
-	// 	}
-	// }(i)
-	//
-	// fmt.Println("555", more)
+	/* usually 30, but left variable in case API changes (untested) */
+	booksPerPage := len(mapTitles)
 
 	/* Receive pages in order */
 	for i := 2; i <= more+1; i++ {
-		<-channels[i]
+		moreTitles := <-channels[i]
 		fmt.Println("Receiving channel:", i)
-	}
 
-	// var moreTitles map[int]string
-	//
-	// for more > 0 {
-	// 	page++
-	// 	more--
-	// 	moreTitles, _, err = requestPage(page, AuthorID, endpointBase)
-	// 	if err != nil {
-	// 		return make(map[int]string), err
-	// 	}
-	//
-	// 	i := len(mapTitles)
-	// 	for _, value := range moreTitles {
-	// 		mapTitles[i] = value
-	// 		i++
-	// 	}
-	// }
+		/* add them to mapTitles (sequential) */
+		for j := 0; j <= booksPerPage; j++ {
+			if moreTitles[j] != "" {
+				mapTitles[(i-1)*booksPerPage+j] = moreTitles[j]
+			}
+		}
+	}
 
 	return mapTitles, nil
 }
