@@ -86,55 +86,79 @@ func requestAllBookTitles(AuthorID int) (map[int]string, error) {
 	}
 
 	/* Make a map of channels, 1 channel per page */
-	// channels := make(map[int](chan map[int]string))
+	channels := make(map[int](chan map[int]string))
+	for i := 2; i <= more+1; i++ {
+		channels[i] = make(chan map[int]string)
+	}
 
-	/* Make 'more' requests */
-	// for i := 2; i <= more; i++ {
-	// 	// channelMaps := make(chan map[int]string)
-	// 	fmt.Println("For loop. i =", i)
-	// 	go func(i int) {
-	// 		fmt.Println("Go func. i =", i)
-	// 		moreTitles, _, err := requestPage(i, AuthorID, endpointBase)
-	// 		if err != nil {
-	// 			fmt.Println("This request failed:", i)
-	// 			channels[i] <- make(map[int]string)
-	// 		} else {
-	// 			fmt.Println("Received: page", i)
-	// 			fmt.Println("111")
-	// 			channels[i] <- moreTitles
-	// 			fmt.Println("222")
-	// 		}
-	// 	}(i)
+	/* Make 'more' (number of) requests */
+	for i := 2; i <= more+1; i++ {
+		// channelMaps := make(chan map[int]string)
+		fmt.Println("For loop. i =", i)
+		go func(i int) {
+			fmt.Println("Go func. i =", i)
+			moreTitles, _, err := requestPage(i, AuthorID, endpointBase)
+			if err != nil {
+				fmt.Println("This request failed:", i)
+				channels[i] <- make(map[int]string)
+			} else {
+				fmt.Println("Received: page", i)
+				fmt.Println("111")
+				channels[i] <- moreTitles
+				fmt.Println("222")
+			}
+		}(i)
+	}
+
+	// for i := 2; i <= more+1; i++ {
+	// 	channels[i] = make(chan map[int]string)
 	// }
-
-	channel2 := make(chan map[int]string)
-	i := 2
-	// channelMaps := make(chan map[int]string)
-	fmt.Println("For loop. i =", i)
-	go func(i int) {
-		fmt.Println("Go func. i =", i)
-		moreTitles, _, err := requestPage(i, AuthorID, endpointBase)
-		if err != nil {
-			fmt.Println("This request failed:", i)
-			channel2 <- make(map[int]string)
-		} else {
-			fmt.Println("Received: page", i)
-			fmt.Println("111")
-			channel2 <- moreTitles
-			fmt.Println("222")
-		}
-	}(i)
-
-	fmt.Println("555. more:", more)
-
-	someMap := <-channel2
-	fmt.Println(someMap)
-	fmt.Println("Receiving channel:", i)
+	//
+	// i := 2
+	//
+	// // channels[i] = make(chan map[int]string)
+	// // channelMaps := make(chan map[int]string)
+	// fmt.Println("For loop. i =", i)
+	// go func(i int) {
+	// 	fmt.Println("Go func. i =", i)
+	// 	moreTitles, _, err := requestPage(i, AuthorID, endpointBase)
+	// 	if err != nil {
+	// 		fmt.Println("This request failed:", i)
+	// 		channels[i] <- make(map[int]string)
+	// 	} else {
+	// 		fmt.Println("Received: page", i)
+	// 		fmt.Println("111")
+	// 		channels[i] <- moreTitles
+	// 		fmt.Println("222")
+	// 	}
+	// }(i)
+	//
+	// i = 3
+	//
+	// // channels[i] = make(chan map[int]string)
+	// // channelMaps := make(chan map[int]string)
+	// fmt.Println("For loop. i =", i)
+	// go func(i int) {
+	// 	fmt.Println("Go func. i =", i)
+	// 	moreTitles, _, err := requestPage(i, AuthorID, endpointBase)
+	// 	if err != nil {
+	// 		fmt.Println("This request failed:", i)
+	// 		channels[i] <- make(map[int]string)
+	// 	} else {
+	// 		fmt.Println("Received: page", i)
+	// 		fmt.Println("333")
+	// 		channels[i] <- moreTitles
+	// 		fmt.Println("444")
+	// 	}
+	// }(i)
+	//
+	// fmt.Println("555", more)
 
 	/* Receive pages in order */
-	// for i := 2; i <= more; i++ {
-	// 	fmt.Println("Receiving channel:", i)
-	// }
+	for i := 2; i <= more+1; i++ {
+		<-channels[i]
+		fmt.Println("Receiving channel:", i)
+	}
 
 	// var moreTitles map[int]string
 	//
