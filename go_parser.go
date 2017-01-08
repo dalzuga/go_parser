@@ -2,11 +2,11 @@ package main
 
 import (
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
-	"net/http"
-	"net/url"
+	"os"
 	"strconv"
 )
 
@@ -16,18 +16,32 @@ import (
  */
 
 func main() {
-	AuthorID, err := getAuthorID("books.xml")
-	if err != nil {
-		log.Fatal(err)
+	var AuthorID int
+	var err error
+
+	argc := len(os.Args)
+
+	if argc == 2 {
+		AuthorID, err = strconv.Atoi(os.Args[1])
+		if err != nil {
+			log.Fatal(err)
+		}
+	} else {
+		AuthorID, err = getAuthorID("books.xml")
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
+
+	fmt.Println(AuthorID)
 
 	mapTitles, err := requestAllBookTitles(AuthorID)
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	/* print the book titles */
 	mapLength := len(mapTitles)
-
 	for i := 0; i < mapLength; i++ {
 		fmt.Println(i+1, mapTitles[i])
 	}
@@ -51,6 +65,10 @@ func getAuthorID(fileName string) (int, error) {
 		return 0, err
 	}
 
+	if len(grbq.Book.Authors) < 1 {
+		return 0, errors.New("Author ID not found on XML file!")
+	}
+
 	return grbq.Book.Authors[0].ID, nil // Return the Author ID from the GRBQ struct
 }
 
@@ -72,135 +90,40 @@ func requestAllBookTitles(AuthorID int) (map[int]string, error) {
 		fmt.Println("Additional requests needed:", more)
 	}
 
-	var moreTitles map[int]string
+	/* Make a map of channels, 1 channel per page */
+	channels := make(map[int]chan map[int]string)
+	for i := 2; i <= more+1; i++ {
+		channels[i] = make(chan map[int]string)
+	}
 
-	for more > 0 {
-		page++
-		// mapTitles, more, err := requestPage(page, AuthorID, endpointBase)
-		moreTitles, more, err = requestPage(page, AuthorID, endpointBase)
-		if err != nil {
-			return make(map[int]string), err
-		}
+	/* Make 'more' (number of) requests */
+	for i := 2; i <= more+1; i++ {
+		go func(i int) {
+			moreTitles, _, err := requestPage(i, AuthorID, endpointBase)
+			if err != nil {
+				fmt.Println("This request failed:", i)
+				channels[i] <- make(map[int]string)
+			} else {
+				fmt.Println("Received page:", i)
+				channels[i] <- moreTitles
+			}
+		}(i)
+	}
 
-		i := len(mapTitles)
-		for _, value := range moreTitles {
-			mapTitles[i] = value
-			i++
+	/* usually 30, but left variable in case API changes (untested) */
+	booksPerPage := len(mapTitles)
+
+	/* Receive pages in order */
+	for i := 2; i <= more+1; i++ {
+		moreTitles := <-channels[i]
+
+		/* add them to mapTitles (sequential) */
+		for j := 0; j <= booksPerPage; j++ {
+			if moreTitles[j] != "" {
+				mapTitles[(i-1)*booksPerPage+j] = moreTitles[j]
+			}
 		}
 	}
 
 	return mapTitles, nil
-}
-
-/* This function requests a page from the API. */
-func requestPage(page int, AuthorID int, endpointBase string) (map[int]string, int, error) {
-	req, err := prepareRequest(endpointBase, page, AuthorID)
-	if err != nil {
-		return make(map[int]string), 0, err
-	}
-
-	/*
-	 * resp is of type *http.Response
-	 */
-	resp, err := doRequest(req)
-	if err != nil {
-		return make(map[int]string), 0, err
-	}
-
-	/*
-	 * var 'more' is an int.
-	 * If the API needs to paginate the response, more will indicate how many
-	 * pages need to be requested for a full list of book titles.
-	 * If there is no need to paginate, more will default to 0.
-	 */
-	mapTitles, more, err := parseResponse(resp)
-	if err != nil {
-		return make(map[int]string), 0, err
-	}
-
-	return mapTitles, more, nil
-}
-
-func prepareRequest(endpointBase string, page int, AuthorID int) (*http.Request, error) {
-	/*
-	 * Here, 'u' is a url object.
-	 */
-	u, err := url.Parse(endpointBase)
-	if err != nil {
-		return nil, err
-	}
-
-	/*
-	 * Here, we make a query 'q' out of url object 'u'
-	 */
-	q := u.Query()
-	q.Set("key", `kDkKnUxiz8cRBJhVjrtSA`)
-	q.Set("id", strconv.Itoa(AuthorID))
-	q.Set("page", strconv.Itoa(page))
-
-	/*
-	 * Here, 's' is our fully constructed URL string
-	 */
-	u.RawQuery = q.Encode()
-	s := u.String()
-	fmt.Println(s)
-
-	req, err := http.NewRequest("GET", s, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
-func doRequest(req *http.Request) (*http.Response, error) {
-	client := &http.Client{}
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-
-	return resp, nil
-}
-
-func parseResponse(resp *http.Response) (map[int]string, int, error) {
-	requestBytes, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return make(map[int]string), 0, err
-	}
-
-	var graq GoodReadsAuthorQuery
-
-	err = xml.Unmarshal(requestBytes, &graq)
-	if err != nil {
-		return make(map[int]string), 0, err
-	}
-
-	var requestTitles = make(map[int]string)
-
-	for key, bookValue := range graq.Author.Books.Book {
-		requestTitles[key] = bookValue.Title
-	}
-
-	more, err := checkForMore(&graq)
-	if err != nil {
-		return make(map[int]string), 0, err
-	}
-
-	return requestTitles, more, nil
-}
-
-func checkForMore(graq *GoodReadsAuthorQuery) (int, error) {
-	var start, end, total int
-
-	start = graq.Author.Books.Start
-	end = graq.Author.Books.End
-	total = graq.Author.Books.Total
-
-	if total != end {
-		return (total-end+start)/(end-start) + 1, nil
-	}
-
-	return 0, nil
 }
