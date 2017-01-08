@@ -108,9 +108,7 @@ func requestAllBookTitles(AuthorID int) (map[int]string, error) {
 				channels[i] <- make(map[int]string)
 			} else {
 				fmt.Println("Received: page", i)
-				fmt.Println("111")
 				channels[i] <- moreTitles
-				fmt.Println("222")
 			}
 		}(i)
 	}
