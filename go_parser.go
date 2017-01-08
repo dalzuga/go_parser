@@ -98,7 +98,6 @@ func requestAllBookTitles(AuthorID int) (map[int]string, error) {
 
 	/* Make 'more' (number of) requests */
 	for i := 2; i <= more+1; i++ {
-		// channelMaps := make(chan map[int]string)
 		go func(i int) {
 			moreTitles, _, err := requestPage(i, AuthorID, endpointBase)
 			if err != nil {
