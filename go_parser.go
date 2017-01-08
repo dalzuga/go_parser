@@ -99,15 +99,13 @@ func requestAllBookTitles(AuthorID int) (map[int]string, error) {
 	/* Make 'more' (number of) requests */
 	for i := 2; i <= more+1; i++ {
 		// channelMaps := make(chan map[int]string)
-		fmt.Println("For loop. i =", i)
 		go func(i int) {
-			fmt.Println("Go func. i =", i)
 			moreTitles, _, err := requestPage(i, AuthorID, endpointBase)
 			if err != nil {
 				fmt.Println("This request failed:", i)
 				channels[i] <- make(map[int]string)
 			} else {
-				fmt.Println("Received: page", i)
+				fmt.Println("Received page:", i)
 				channels[i] <- moreTitles
 			}
 		}(i)
@@ -119,7 +117,6 @@ func requestAllBookTitles(AuthorID int) (map[int]string, error) {
 	/* Receive pages in order */
 	for i := 2; i <= more+1; i++ {
 		moreTitles := <-channels[i]
-		fmt.Println("Receiving channel:", i)
 
 		/* add them to mapTitles (sequential) */
 		for j := 0; j <= booksPerPage; j++ {
