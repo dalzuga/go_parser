@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -62,6 +63,10 @@ func getAuthorID(fileName string) (int, error) {
 	err = xml.Unmarshal(fileBytes, &grbq) // Parse the GBRQ XML to a GRBQ struct
 	if err != nil {
 		return 0, err
+	}
+
+	if len(grbq.Book.Authors) < 1 {
+		return 0, errors.New("Author ID not found on XML file!")
 	}
 
 	return grbq.Book.Authors[0].ID, nil // Return the Author ID from the GRBQ struct
